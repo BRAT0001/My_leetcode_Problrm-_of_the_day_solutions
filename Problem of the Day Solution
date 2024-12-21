@@ -1,0 +1,41 @@
+// Solution of the Problem of the Day.
+
+class Solution {
+public:
+    int maxKDivisibleComponents(int n, vector<vector<int>>& edges, vector<int>& values, int k) {
+        vector<vector<int>> graph(n);
+        for (const auto& edge : edges) {
+            graph[edge[0]].emplace_back(edge[1]);
+            graph[edge[1]].emplace_back(edge[0]);
+        }
+
+        vector<bool> visited(n, false);
+        int maxComponents = 0;
+
+        function<int(int)> dfs = [&](int node) {
+            visited[node] = true;
+            int componentSum = values[node];
+            
+            for (int neighbor : graph[node]) {
+                if (!visited[neighbor]) {
+                    componentSum += dfs(neighbor);
+                }
+            }
+            
+            if (componentSum % k == 0) {
+                maxComponents++;
+                componentSum = 0; // Reset sum for new component
+            }
+            
+            return componentSum;
+        };
+
+        for (int i = 0; i < n; ++i) {
+            if (!visited[i]) {
+                dfs(i);
+            }
+        }
+
+        return maxComponents;
+    }
+};
