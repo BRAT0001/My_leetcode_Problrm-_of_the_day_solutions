@@ -1,0 +1,75 @@
+// Solution of the Problem of the day in Java language
+class Solution {
+
+    public int[] leftmostBuildingQueries(int[] heights, int[][] queries) {
+        int n = heights.length;
+        int maxLog = 20;  // We assume n <= 10^6, so log(n) is roughly <= 20
+        int[][] sparseTable = new int[n][maxLog]; // Sparse table for range max queries
+        int[] logTable = new int[n + 1]; // Table to store log values
+        
+        // Step 1: Precompute the log values
+        logTable[0] = -1;
+        for (int i = 1; i <= n; i++) {
+            logTable[i] = logTable[i >> 1] + 1;
+        }
+
+        // Step 2: Initialize the sparse table with heights
+        for (int i = 0; i < n; i++) {
+            sparseTable[i][0] = heights[i];
+        }
+
+        // Step 3: Build the sparse table
+        for (int j = 1; j < maxLog; j++) {
+            for (int i = 0; i + (1 << j) <= n; i++) {
+                sparseTable[i][j] = Math.max(sparseTable[i][j - 1], sparseTable[i + (1 << (j - 1))][j - 1]);
+            }
+        }
+
+        // Step 4: Process each query
+        int[] result = new int[queries.length];
+        for (int queryIndex = 0; queryIndex < queries.length; queryIndex++) {
+            int start = queries[queryIndex][0], end = queries[queryIndex][1];
+
+            // Ensure start <= end
+            if (start > end) {
+                int temp = start;
+                start = end;
+                end = temp;
+            }
+
+            // If start equals end, return the same index
+            if (start == end) {
+                result[queryIndex] = start;
+                continue;
+            }
+
+            // Check if the building at 'end' is taller than the one at 'start'
+            if (heights[end] > heights[start]) {
+                result[queryIndex] = end;
+                continue;
+            }
+
+            // Otherwise, use binary search to find the leftmost building taller than the max height
+            int maxHeight = Math.max(heights[start], heights[end]);
+            int left = end + 1, right = n, mid;
+
+            while (left < right) {
+                mid = (left + right) / 2;
+                int rangeLength = mid - end + 1;
+                int logValue = logTable[rangeLength];
+
+                int maxInRange = Math.max(sparseTable[end][logValue], sparseTable[mid - (1 << logValue) + 1][logValue]);
+
+                if (maxInRange > maxHeight) {
+                    right = mid;
+                } else {
+                    left = mid + 1;
+                }
+            }
+
+            result[queryIndex] = (left == n) ? -1 : left;
+        }
+
+        return result;
+    }
+}
