@@ -1,0 +1,37 @@
+// Solution of Todays leetcode Problem ofthe day
+// This Solution is in Cpp language
+
+#include <vector>
+using namespace std;
+
+class Solution {
+public:
+    int findTargetSumWays(vector<int>& nums, int target) {
+        int totalSum = 0;
+        for (int num : nums) {
+            totalSum += num;
+        }
+        
+        if ((totalSum + target) % 2 != 0 || (totalSum + target) < 0) {
+            return 0;
+        }
+        
+        int subsetSum = (totalSum + target) / 2;
+        return countSubsetsWithSum(nums, subsetSum);
+    }
+    
+private:
+    int countSubsetsWithSum(vector<int>& nums, int subsetSum) {
+        vector<int> dp(subsetSum + 1, 0);
+        dp[0] = 1;
+        
+        for (int num : nums) {
+            for (int j = subsetSum; j >= num; --j) {
+                dp[j] += dp[j - num];
+            }
+        }
+        
+        return dp[subsetSum];
+    }
+};
+
